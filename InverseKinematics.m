@@ -1,7 +1,5 @@
 %{
-This function is supposed to implement inverse kinematics for a robot arm
-with 3 links constrained to move in 2-D. The comments will walk you through
-the algorithm for the Jacobian Method for inverse kinematics
+Jacobian Method for inverse kinematics
 
 INPUTS:
 l==>L
@@ -13,10 +11,9 @@ theta0_target, theta1_target, theta2_target: Joint angles of the robot that
 take the end effector to [x_e_target,y_e_target]
 %}
 function [theta0_target, theta1_target, theta2_target] = InverseKinematics(L0,L1,L2,x_e_target,y_e_target)
-    % Initialize the thetas to some value
+    % Initialize the thetas
     theta0 = pi/3; theta1 = 0; theta2 = 0;
     % Obtain end effector position x_e, y_e for current thetas: 
-    % HINT: use your ForwardKinematics function
     [x1,y1,x2,y2,x_e,y_e]=ForwardKinematics(L0,L1,L2,theta0,theta1,theta2);
     target=[x_e_target,y_e_target];
     estimated=[x_e,y_e];
@@ -25,10 +22,8 @@ function [theta0_target, theta1_target, theta2_target] = InverseKinematics(L0,L1
     stack_x.push(x_e);
     stack_y.push(y_e);
     epsilom=0.1;
-    %(Replace the '1'  with a condition that checks if your estimated [x_e,y_e] is close to [x_e_target,y_e_target])
-    while  norm(target-estimated)>epsilom %check if exact match
-        % Calculate the Jacobian matrix for current values of theta:
-        % HINT: write a function for doing this
+    while  norm(target-estimated)>epsilom
+        % Calculating the Jacobian matrix for current values of theta:
         d11 = -L0*sin(theta0)-L1*sin(theta0+theta1)-L2*sin(theta0+theta1+theta2);
         d12 = -L1*sin(theta0+theta1)-L2*sin(theta0+theta1+theta2);
         d13 = -L2*sin(theta0+theta1+theta2);
@@ -36,28 +31,28 @@ function [theta0_target, theta1_target, theta2_target] = InverseKinematics(L0,L1
         d22 = L1*cos(theta0+theta1)+L2*cos(theta0+theta1+theta2);
         d23 = L2*cos(theta0+theta1+theta2);
         J = [d11,d12,d13;d21,d22,d23];
-        % Calculate the pseudo-inverse of the jacobian using 'pinv()': 
+        % Calculating the pseudo-inverse of the jacobian: 
         iJ=pinv(J);
-        % Update the values of the thetas by a small step:
+        % Updating the values of thetas:
         alpha=0.1;
         delta=alpha*iJ*[x_e_target-x_e;y_e_target-y_e];
         theta0=theta0+delta(1);
         theta1=theta1+delta(2);
         theta2=theta2+delta(3);
-        % Obtain end effector position x_e, y_e for the updated thetas:
+        % Obtaining end effector position x_e, y_e for the updated thetas:
         [x1,y1,x2,y2,x_e,y_e]=ForwardKinematics(L0,L1,L2,theta0,theta1,theta2);
         estimated=[x_e,y_e];
         stack_x.push(x_e);
         stack_y.push(y_e);
-        % Draw the robot using drawRobot( ) : This will help you visualize how the robot arm moves through the iteration: 
+        % Visualizing robot arm movement
         drawRobot(x1,y1,x2,y2,x_e,y_e)     
-        pause(0.00001)  % This will slow the loop just a little bit to help you visualize the robot arm movement 
+        pause(0.00001)  % delay to visualize arm movement
     end
-    % Set the theta_target values:
+    % Setting theta_target values:
     theta0_target = theta0;
     theta1_target = theta1;
     theta2_target = theta2;
-    % effector history tracker
+    % Effector history tracker
     N=stack_x.size();
     x_hist=zeros(1,N);
     y_hist=zeros(1,N);
